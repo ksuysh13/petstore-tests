@@ -16,7 +16,6 @@ import java.io.File;
 import java.util.List;
 
 public class PetStoreApiTest {
-
     private static final String BASE_URL = "https://petstore.swagger.io/v2";
     private static final String PET_ENDPOINT = "/pet";
     private Long petId; // ID созданного питомца
@@ -54,6 +53,7 @@ public class PetStoreApiTest {
 
         // Сохраняем ID созданного питомца
         petId = response.jsonPath().getLong("id");
+        assertEquals(200, response.getStatusCode(), "Failed to create pet");
         System.out.println("Created pet with ID: " + petId);
     }
 
@@ -167,6 +167,4 @@ public class PetStoreApiTest {
             Thread.currentThread().interrupt();
         }
     }
-
-    
 }
