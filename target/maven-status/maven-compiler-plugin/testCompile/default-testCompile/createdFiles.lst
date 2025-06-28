@@ -1,0 +1,4 @@
+com\example\petstore\models\Category.class
+com\example\petstore\api\PetStoreApiTest.class
+com\example\petstore\models\Pet.class
+com\example\petstore\models\Tag.class

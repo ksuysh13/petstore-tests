@@ -5,9 +5,13 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import java.util.List;
 
 public class PetStoreApiTest {
 
@@ -16,6 +20,7 @@ public class PetStoreApiTest {
     private Long petId; // ID созданного питомца
 
     @BeforeEach
+    @DisplayName("Add a new pet to the store")
     public void setUp() {
         // Настройка базового URL для всех запросов
         RestAssured.baseURI = BASE_URL;
@@ -51,6 +56,7 @@ public class PetStoreApiTest {
     }
 
     @Test
+    @DisplayName("Find pet by ID")
     public void testGetPetById() {
         // Получение информации о питомце по ID
         Response response = RestAssured.given()
@@ -63,6 +69,7 @@ public class PetStoreApiTest {
     }
 
     @Test
+    @DisplayName("Update an existing pet")
     public void testUpdatePet() {
         // Обновление информации о питомце
         String updatedPetJson = """
@@ -95,7 +102,39 @@ public class PetStoreApiTest {
         assertEquals("sold", response.jsonPath().getString("status"), "Updated pet status mismatch");
     }
 
+    @Test
+    @DisplayName("Find pets by status")
+    public void testFindPetsByStatus() {
+        Response response = RestAssured.given()
+                .queryParam("status", "available")
+                .get(PET_ENDPOINT + "/findByStatus");
+
+        assertEquals(200, response.getStatusCode(), "Failed to find pets by status");
+        List<Object> pets = response.jsonPath().getList("$");
+        assertFalse(pets.isEmpty(), "No pets found with status 'available'");
+    }
+
+    @Test
+    @DisplayName("Updates a pet in the store with form data")
+    public void testUpdatePetWithFormData() {
+        Response response = RestAssured.given()
+                .contentType(ContentType.URLENC)
+                .formParam("name", "Rex")
+                .formParam("status", "pending")
+                .post(PET_ENDPOINT + "/" + petId);
+
+        assertEquals(200, response.getStatusCode());
+        
+        // Проверяем, что обновление применилось
+        Response getResponse = RestAssured.given()
+                .get(PET_ENDPOINT + "/" + petId);
+        
+        assertEquals("Rex", getResponse.jsonPath().getString("name"));
+        assertEquals("pending", getResponse.jsonPath().getString("status"));
+    }
+
     @AfterEach
+    @DisplayName("Deletes a pet")
     public void tearDown() {
         // Удаление питомца после каждого теста
         if (petId != null) {
@@ -104,6 +143,12 @@ public class PetStoreApiTest {
 
             assertEquals(200, response.getStatusCode(), "Failed to delete pet");
             System.out.println("Deleted pet with ID: " + petId);
+        }
+
+        try {
+        Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
