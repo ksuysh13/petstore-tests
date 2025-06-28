@@ -10,7 +10,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.File;
 import java.util.List;
 
 public class PetStoreApiTest {
@@ -34,7 +36,7 @@ public class PetStoreApiTest {
                         "name": "dogs"
                     },
                     "name": "Buddy",
-                    "photoUrls": ["https://example.com/buddy.jpg"],
+                    "photoUrls": ["src/test/resources/Buddy.jpg"],
                     "tags": [
                         {
                             "id": 1,
@@ -80,7 +82,7 @@ public class PetStoreApiTest {
                         "name": "dogs"
                     },
                     "name": "Max",
-                    "photoUrls": ["https://example.com/max.jpg"],
+                    "photoUrls": ["src/test/resources/test_image.jpg"],
                     "tags": [
                         {
                             "id": 1,
@@ -131,6 +133,20 @@ public class PetStoreApiTest {
         
         assertEquals("Rex", getResponse.jsonPath().getString("name"));
         assertEquals("pending", getResponse.jsonPath().getString("status"));
+    }
+
+    @Test
+    @DisplayName("Uploads an image")
+    public void testUploadPetImage() {
+        File imageFile = new File("src/test/resources/test_image.jpg");
+        
+        Response response = RestAssured.given()
+                .contentType(ContentType.MULTIPART)
+                .multiPart("file", imageFile, "image/jpeg")
+                .post(PET_ENDPOINT + "/" + petId + "/uploadImage");
+
+        assertEquals(200, response.getStatusCode());
+        assertTrue(response.jsonPath().getString("message").contains("File uploaded"));
     }
 
     @AfterEach
