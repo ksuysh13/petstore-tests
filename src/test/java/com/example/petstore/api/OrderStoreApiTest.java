@@ -20,10 +20,7 @@ public class OrderStoreApiTest {
     private static final String STORE_ENDPOINT = "/store/order";
     private Long orderId;
 
-    @BeforeEach
-    public void setUp() {
-        RestAssured.baseURI = BASE_URL;
-
+    private static 
         String orderJson = """
                 {
                     "id": 0,
@@ -34,6 +31,10 @@ public class OrderStoreApiTest {
                     "complete": true
                 }
                 """;
+
+    @BeforeEach
+    public void setUp() {
+        RestAssured.baseURI = BASE_URL;
 
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)

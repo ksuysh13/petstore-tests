@@ -14,9 +14,10 @@ public class UserStoreApiTest {
     private static final String BASE_URL = "https://petstore.swagger.io/v2";
     private static final String USER_ENDPOINT = "/user";
     private static String username = "testuser123";
+    private static String user1 = "user1";
+    private static String user2 = "user2";
 
-    private static void createUser() {
-         String userJson = """
+    private static String userJson = """
                 {
                     "id": 0,
                     "username": "%s",
@@ -29,6 +30,45 @@ public class UserStoreApiTest {
                 }
                 """.formatted(username);
 
+    private static String updatedUserJson = """
+                {
+                    "id": 0,
+                    "username": "%s",
+                    "firstName": "Updated",
+                    "lastName": "User",
+                    "email": "updated@example.com",
+                    "password": "updated123",
+                    "phone": "0987654321",
+                    "userStatus": 1
+                }
+                """.formatted(username);
+
+    private static String usersJson = """
+            [
+                {
+                    "id": 0,
+                    "username": "%s",
+                    "firstName": "User1",
+                    "lastName": "Test",
+                    "email": "user1@example.com",
+                    "password": "pass1",
+                    "phone": "1111111111",
+                    "userStatus": 1
+                },
+                {
+                    "id": 0,
+                    "username": "%s",
+                    "firstName": "User2",
+                    "lastName": "Test",
+                    "email": "user2@example.com",
+                    "password": "pass2",
+                    "phone": "2222222222",
+                    "userStatus": 1
+                }
+            ]
+            """.formatted(user1, user2);
+
+    private static void createUser() {
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(userJson)
@@ -36,14 +76,6 @@ public class UserStoreApiTest {
 
         assertEquals(200, response.getStatusCode(), "Failed to create user");
         System.out.println("Create user");
-    }
-
-    private static void deleteUser() {
-        Response response = RestAssured.given()
-                .delete(USER_ENDPOINT + "/" + username);
-
-        assertEquals(200, response.getStatusCode(), "Failed to delete user");
-        System.out.println("Deleted user");
     }
 
     @BeforeEach
@@ -56,7 +88,7 @@ public class UserStoreApiTest {
     public void testCreateUser() {
         createUser();
 
-        deleteUser();
+        RestAssured.given().delete(USER_ENDPOINT + "/" + username);
     }
 
     @Test
@@ -70,26 +102,13 @@ public class UserStoreApiTest {
         assertEquals(200, response.getStatusCode());
         assertEquals(username, response.jsonPath().getString("username"), "User not found");
 
-        deleteUser();
+        RestAssured.given().delete(USER_ENDPOINT + "/" + username);
     }
 
     @Test
     @DisplayName("Update user")
     public void testUpdateUser() {
         createUser();
-        
-        String updatedUserJson = """
-                {
-                    "id": 0,
-                    "username": "%s",
-                    "firstName": "Updated",
-                    "lastName": "User",
-                    "email": "updated@example.com",
-                    "password": "updated123",
-                    "phone": "0987654321",
-                    "userStatus": 1
-                }
-                """.formatted(username);
 
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -102,7 +121,7 @@ public class UserStoreApiTest {
                 .get(USER_ENDPOINT + "/" + username);
         assertEquals("Updated", getResponse.jsonPath().getString("firstName"));
 
-        deleteUser();
+        RestAssured.given().delete(USER_ENDPOINT + "/" + username);
     }
 
     @Test
@@ -129,5 +148,31 @@ public class UserStoreApiTest {
         assertTrue(response.jsonPath().getString("message").contains("ok"));
     }
 
+    @Test
+    @DisplayName("Create users with list")
+    public void testCreateUsersWithList() {
+        Response response = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(usersJson)
+                .post(USER_ENDPOINT + "/createWithList");
 
+        assertEquals(200, response.getStatusCode(), "Failed to create users with list");
+
+        RestAssured.given().delete(USER_ENDPOINT + "/" + user1);
+        RestAssured.given().delete(USER_ENDPOINT + "/" + user2);
+    }
+
+    @Test
+    @DisplayName("Create users with array")
+    public void testCreateUsersWithArray() {
+        Response response = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body(usersJson)
+                .post(USER_ENDPOINT + "/createWithArray");
+
+        assertEquals(200, response.getStatusCode(), "Failed to create users with array");
+
+        RestAssured.given().delete(USER_ENDPOINT + "/" + user1);
+        RestAssured.given().delete(USER_ENDPOINT + "/" + user2);
+    }
 }

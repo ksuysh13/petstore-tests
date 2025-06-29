@@ -18,23 +18,19 @@ import java.util.List;
 public class PetStoreApiTest {
     private static final String BASE_URL = "https://petstore.swagger.io/v2";
     private static final String PET_ENDPOINT = "/pet";
-    private Long petId; // ID созданного питомца
+    private static Long petId; // ID созданного питомца
 
-    @BeforeEach
-    @DisplayName("Add a new pet to the store")
-    public void setUp() {
-        // Настройка базового URL для всех запросов
-        RestAssured.baseURI = BASE_URL;
+    private static String testNameDog = "Buddy";
+    private static String updateNameDog = "Max";
 
-        // Создание тестового питомца перед каждым тестом
-        String petJson = """
+    private static String petJson = """
                 {
                     "id": 0,
                     "category": {
                         "id": 1,
                         "name": "dogs"
                     },
-                    "name": "Buddy",
+                    "name": "%s",
                     "photoUrls": ["src/test/resources/Buddy.jpg"],
                     "tags": [
                         {
@@ -44,8 +40,34 @@ public class PetStoreApiTest {
                     ],
                     "status": "available"
                 }
-                """;
+                """.formatted(testNameDog);
 
+    private static String updatedPetJson = """
+                {
+                    "id": %d,
+                    "category": {
+                        "id": 1,
+                        "name": "dogs"
+                    },
+                    "name": "%s",
+                    "photoUrls": ["src/test/resources/test_image.jpg"],
+                    "tags": [
+                        {
+                            "id": 1,
+                            "name": "friendly"
+                        }
+                    ],
+                    "status": "sold"
+                }
+                """.formatted(petId, updateNameDog);
+
+    @BeforeEach
+    @DisplayName("Add a new pet to the store")
+    public void setUp() {
+        // Настройка базового URL для всех запросов
+        RestAssured.baseURI = BASE_URL;
+
+        // Создание тестового питомца перед каждым тестом
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(petJson)
@@ -66,7 +88,7 @@ public class PetStoreApiTest {
 
         // Проверки
         assertEquals(200, response.getStatusCode(), "Failed to get pet by ID");
-        assertEquals("Buddy", response.jsonPath().getString("name"), "Pet name mismatch");
+        assertEquals(testNameDog, response.jsonPath().getString("name"), "Pet name mismatch");
         assertEquals("available", response.jsonPath().getString("status"), "Pet status mismatch");
     }
 
@@ -74,25 +96,6 @@ public class PetStoreApiTest {
     @DisplayName("Update an existing pet")
     public void testUpdatePet() {
         // Обновление информации о питомце
-        String updatedPetJson = """
-                {
-                    "id": %d,
-                    "category": {
-                        "id": 1,
-                        "name": "dogs"
-                    },
-                    "name": "Max",
-                    "photoUrls": ["src/test/resources/test_image.jpg"],
-                    "tags": [
-                        {
-                            "id": 1,
-                            "name": "friendly"
-                        }
-                    ],
-                    "status": "sold"
-                }
-                """.formatted(petId);
-
         Response response = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .body(updatedPetJson)
@@ -100,7 +103,7 @@ public class PetStoreApiTest {
 
         // Проверки
         assertEquals(200, response.getStatusCode(), "Failed to update pet");
-        assertEquals("Max", response.jsonPath().getString("name"), "Updated pet name mismatch");
+        assertEquals(updateNameDog, response.jsonPath().getString("name"), "Updated pet name mismatch");
         assertEquals("sold", response.jsonPath().getString("status"), "Updated pet status mismatch");
     }
 
